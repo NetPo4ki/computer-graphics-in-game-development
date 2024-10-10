@@ -74,14 +74,14 @@ namespace cg::renderer
 	{
 		if (render_target)
 		{
-			for (size_t i = 0; i < render_target->get_number_of_elements(); i++)
+			for (size_t i = 0; i < render_target->count(); i++)
 			{
 				render_target->item(i) = in_clear_value;
 			}
 		}
 		if (depth_buffer)
 		{
-			for (size_t i = 0; i < depth_buffer->get_number_of_elements(); i++)
+			for (size_t i = 0; i < depth_buffer->count(); i++)
 			{
 				depth_buffer->item(i) = in_depth;
 			}
