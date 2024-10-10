@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+
+
 namespace cg
 {
 	struct settings
@@ -27,6 +29,10 @@ namespace cg
 
 		unsigned raytracing_depth;
 		unsigned accumulation_num;
+
+		bool show_edges;
 	};
 
-}// namespace cg
+
+
+} // namespace cg
