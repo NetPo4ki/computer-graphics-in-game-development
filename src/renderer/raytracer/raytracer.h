@@ -57,7 +57,6 @@ namespace cg::renderer
 		a = float3{vertex_a.x, vertex_a.y, vertex_a.z};
 		b = float3{vertex_b.x, vertex_b.y, vertex_b.z};
 		c = float3{vertex_c.x, vertex_c.y, vertex_c.z};
-
 		ba = b - a;
 		ca = c - a;
 		na = float3{vertex_a.nx, vertex_a.ny, vertex_a.nz};
@@ -142,7 +141,6 @@ namespace cg::renderer
 	{
 		width = in_width;
 		height = in_height;
-
 		history = std::make_shared<cg::resource<float3>>(width, height);
 	}
 
@@ -150,7 +148,7 @@ namespace cg::renderer
 	inline void raytracer<VB, RT>::clear_render_target(
 			const RT& in_clear_value)
 	{
-		for (size_t i = 0; i < render_target->get_number_of_elements(); i++) {
+		for (size_t i = 0; i < render_target->count(); i++) {
 			render_target->item(i) = in_clear_value;
 			history->item(i) = float3{0, 0, 0};
 		}
@@ -176,7 +174,7 @@ namespace cg::renderer
 			auto& vertex_buffer = vertex_buffers[shape_id];
 			size_t index_id = 0;
 			aabb<VB> aabb;
-			while (index_id < index_buffer->get_number_of_elements()) {
+			while (index_id < index_buffer->count()) {
 				triangle<VB> triangle(
 						vertex_buffer->item(index_buffer->item(index_id++)),
 						vertex_buffer->item(index_buffer->item(index_id++)),
@@ -205,12 +203,11 @@ namespace cg::renderer
 					float u = (2.f * x + jitter.x) / static_cast<float>(width - 1) - 1.f;
 					float v = (2.f * y + jitter.y) / static_cast<float>(height - 1) - 1.f;
 					u *= static_cast<float>(width) / static_cast<float>(height);
-
 					float3 ray_direction = direction + u * right - v * up;
 					ray ray(position, ray_direction);
 					payload payload = trace_ray(ray, depth);
 					auto& history_pixel = history->item(x, y);
-					history_pixel += sqrt(float3{
+					history_pixel += sqrt(float3{ // sqrt for anti-aliasing
 											 payload.color.r,
 											 payload.color.g,
 											 payload.color.b} *
@@ -222,6 +219,8 @@ namespace cg::renderer
 		}
 	}
 
+#pragma clang diagnostic pop //remove
+
 	template<typename VB, typename RT>
 	inline payload raytracer<VB, RT>::trace_ray(
 			const ray& ray, size_t depth, float max_t, float min_t) const
@@ -232,7 +231,6 @@ namespace cg::renderer
 		payload closest_hit_payload{};
 		closest_hit_payload.t = max_t;
 		const triangle<VB>* closest_triangle = nullptr;
-
 		for (auto& aabb: acceleration_structures)
 		{
 			if (!aabb.aabb_test(ray))
@@ -247,7 +245,6 @@ namespace cg::renderer
 				}
 			}
 		}
-
 		if (closest_hit_payload.t < max_t) {
 			if (closest_hit_shader)
 				return closest_hit_shader(ray, closest_hit_payload, *closest_triangle, depth);
@@ -274,7 +271,6 @@ namespace cg::renderer
 		float v = dot(ray.direction, qvec) * inv_det;
 		if (v < 0.f || u + v > 1.f)
 			return payload;
-
 		payload.t = dot(triangle.ca, qvec) * inv_det;
 		payload.bary = float3{1.f - v - u, u, v};
 		return payload;
@@ -316,11 +312,9 @@ namespace cg::renderer
 			aabb_max = aabb_min = triangle.a;
 		}
 		triangles.push_back(triangle);
-
 		aabb_max = max(aabb_max, triangle.a);
 		aabb_max = max(aabb_max, triangle.b);
 		aabb_max = max(aabb_max, triangle.c);
-
 		aabb_min = min(aabb_min, triangle.a);
 		aabb_min = min(aabb_min, triangle.b);
 		aabb_min = min(aabb_min, triangle.c);
